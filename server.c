@@ -17,9 +17,9 @@
 #include <sys/stat.h>
 /* You will have to modify the program below */
 
-#define MAXBUFSIZE 100
+#define MAXBUFSIZE 2048
 
-int main (int argc, char * argv[] )
+int main()
 {
 
 	int sock;                           //This will be our socket
@@ -28,6 +28,20 @@ int main (int argc, char * argv[] )
 	unsigned int remote_length;         //length of the sockaddr_in structure
 	int nbytes;                        //number of bytes we receive in our message
 	char buffer[MAXBUFSIZE];             //a buffer to store our received message
+	char* method;
+	char* splitInput;
+	char fileName[MAXBUFSIZE];
+	int fd;
+	int len;
+
+	char png_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/png; charset=UTF-8\r\n\r\n";
+  char gif_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/gif; charset=UTF-8\r\n\r\n";
+  char html_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+  char text_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+  char css_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/css; charset=UTF-8\r\n\r\n";
+  char jpg_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/jpeg; charset=UTF-8\r\n\r\n";
+  char js_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/javascript; charset=UTF-8\r\n\r\n";
+
 
 	/******************
 	  This code populates the sockaddr_in struct with
@@ -51,6 +65,7 @@ int main (int argc, char * argv[] )
 	if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
 	{
 		printf("unable to bind socket\n");
+		exit(1);
 	}
 
   if(listen(sock, 5) < 0) {
@@ -77,7 +92,37 @@ int main (int argc, char * argv[] )
       exit(1);
    }
 
-   printf("Here is the message: %s\n",buffer);
+   printf("%s\n",buffer);
 
+	 // GET or POST
+	 method = strtok(buffer, " ");
+
+	 // Get filename
+	 splitInput = strtok(NULL, " ");
+	 //fileName = strtok(NULL, " ");
+	 if (splitInput[0] == '/') splitInput++;
+	 sprintf(fileName, "%s", splitInput);
+	 //splitInput[strlen(splitInput) - 1] = '\0';
+
+
+	 printf("%s\n", splitInput);
+	 //fd = open(filename, O_RDONLY);
+
+	 //nbytes = send(sock, &over, sizeof(over), 0, (struct sockaddr *) &remote, sizeof(remote));
+
+	 len = send(connectionSock, html_response, sizeof(html_response) - 1, 0);
+
+	 bzero(buffer,sizeof(buffer));
+	 fd = open(fileName, O_RDONLY);
+	 while(read(fd, buffer, sizeof(buffer)) != 0) {
+		 printf("hit\n" );
+	   len = send(connectionSock, buffer, strlen(buffer), 0);
+	 	 bzero(buffer,sizeof(buffer));
+	 }
+
+
+	 //len = send(connectionSock, &fd, sizeof(fd) - 1, 0);
+	 printf("%i\n", len);
+	 close(sock);
 
 }
