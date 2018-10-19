@@ -40,16 +40,24 @@ int main()
 	struct dirent* in_file;
 	int len;
 	int i;
+	int readBytes;
 	int typeIndex;
+	struct stat st;
 
-	char png_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/png; charset=UTF-8\r\n\r\n";
-  char gif_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/gif; charset=UTF-8\r\n\r\n";
-  char html_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/html; charset=UTF-8\r\n\r\n";
-  char text_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
-  char css_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/css; charset=UTF-8\r\n\r\n";
-  char jpg_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/jpeg; charset=UTF-8\r\n\r\n";
-  char js_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/javascript; charset=UTF-8\r\n\r\n";
-	char htm_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/html; charset=UTF-8\r\n\r\n";
+	char file_size[MAXBUFSIZE];
+  FILE *requested_file;
+  size_t read_bytes, total_read_bytes;
+
+	char sendBuffer[MAXBUFSIZE];
+	char contentLenght[] = "Content-Length: ";
+	char png_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/png; charset=UTF-8\r\n";
+  char gif_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/gif; charset=UTF-8\r\n";
+  char html_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/html; charset=UTF-8\r\n";
+  char text_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/plain; charset=UTF-8\r\n";
+  char css_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/css; charset=UTF-8\r\n";
+  char jpg_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: image/jpeg; charset=UTF-8\r\n";
+  char js_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/javascript; charset=UTF-8\r\n";
+	char htm_response[] = "HTTP/1.1 200 OK:\r\n" "Content-Type: text/html; charset=UTF-8\r\n";
 
 	/******************
 	  This code populates the sockaddr_in struct with
@@ -108,7 +116,13 @@ int main()
 	      exit(1);
 	   }
 
+
+
 	   printf("%s\n",buffer);
+
+
+
+
 
 		 // GET or POST
 		 method = strtok(buffer, " ");
@@ -121,14 +135,22 @@ int main()
 		 printf("request: %s\n", splitInput);
 		 sprintf(uri, "%s", splitInput);
 		 if(!strcmp(splitInput, "/") || !strcmp(splitInput, "/index.html")) {
-			 printf("hit\n");
-			 len = send(connectionSock, html_response, sizeof(html_response) - 1, 0);
+			 bzero(sendBuffer,sizeof(sendBuffer));
+			 strcat(sendBuffer, html_response);
+			 strcat(sendBuffer, contentLenght);
+			 if (stat("index.html", &st) == 0)
+			 	 	 sprintf(file_size, "%lli", st.st_size);
+			 strcat(sendBuffer, file_size);
+			 strcat(sendBuffer, "\r\n\r\n");
+			 printf("%s\n", sendBuffer);
+			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			 bzero(buffer,sizeof(buffer));
 			 fd = open("index.html", O_RDONLY);
 			 while(read(fd, buffer, sizeof(buffer)) != 0) {
 				 len = send(connectionSock, buffer, strlen(buffer), 0);
 				 bzero(buffer,sizeof(buffer));
 			 }
+			 close(fd);
 
 		 }
 		 else {
@@ -167,43 +189,129 @@ int main()
 
 
 			if(!strcmp(fileType, "png")) {
-			 len = send(connectionSock, png_response, sizeof(png_response) - 1, 0);
+			  bzero(sendBuffer,sizeof(sendBuffer));
+ 			  strcat(sendBuffer, png_response);
+ 			  strcat(sendBuffer, contentLenght);
+ 			  if (stat(filePath, &st) == 0)
+ 			  	 	 sprintf(file_size, "%lli", st.st_size);
+ 			  strcat(sendBuffer, file_size);
+ 			  strcat(sendBuffer, "\r\n\r\n");
+ 			  printf("%s\n", sendBuffer);
+ 			  len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "gif")) {
-			 len = send(connectionSock, gif_response, sizeof(gif_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, gif_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "html")) {
-			 len = send(connectionSock, html_response, sizeof(html_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, html_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "txt")) {
-			 len = send(connectionSock, text_response, sizeof(text_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, text_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "css")) {
-			 len = send(connectionSock, css_response, sizeof(css_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, css_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "jpg")) {
-			 len = send(connectionSock, jpg_response, sizeof(jpg_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, jpg_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "js")) {
-			 len = send(connectionSock, js_response, sizeof(js_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, js_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 			else if(!strcmp(fileType, "htm")) {
-			 len = send(connectionSock, htm_response, sizeof(htm_response) - 1, 0);
+				bzero(sendBuffer,sizeof(sendBuffer));
+  			 strcat(sendBuffer, htm_response);
+  			 strcat(sendBuffer, contentLenght);
+  			 if (stat(filePath, &st) == 0)
+  			 	 	 sprintf(file_size, "%lli", st.st_size);
+  			 strcat(sendBuffer, file_size);
+  			 strcat(sendBuffer, "\r\n\r\n");
+  			 printf("%s\n", sendBuffer);
+  			 len = send(connectionSock, sendBuffer, strlen(sendBuffer), 0);
 			}
 
 			 bzero(buffer,sizeof(buffer));
+
+			 // requested_file = fopen(filePath, "r");
+  	 	 // fseek(requested_file, 0, SEEK_END);
+  	 	 // file_size = ftell(requested_file);
+  	 	 // fseek(requested_file, 0, SEEK_SET);
+
 			 fd = open(filePath, O_RDONLY);
 			 if(fd < 0) {
 				 printf("Error opening file.\n");
 				 return -1;
 			 }
 
-			 while(read(fd, buffer, sizeof(buffer)) != 0) {
+			 // total_read_bytes = 0;
+  	 	 // while (!feof(requested_file)) {
+				//  printf("sending...\n");
+				//  bzero(buffer,sizeof(buffer));
+    		//  read_bytes = fread(buffer, 1, 1024, requested_file);
+    		//  total_read_bytes += read_bytes;
+    		//  send(connectionSock, buffer, read_bytes, 0);
+  		 // }
+  	 	 // fclose(requested_file);
+
+			 while(1) {
 				 printf("sending...\n");
-				 printf("%s\n", buffer);
-				 len = send(connectionSock, buffer, strlen(buffer), 0);
+				 readBytes = read(fd, buffer, sizeof(buffer));
+				 if(readBytes == 0) {
+					 printf("break\n");
+					 break;
+				 }
+				 //printf("%s\n", buffer);
+				 len = send(connectionSock, buffer, readBytes, 0);
 				 bzero(buffer,sizeof(buffer));
 			 }
+			 close(fd);
 
 		 }
 	}
